@@ -403,6 +403,24 @@ const {
   getDataCache,
 })
 
+// File drop to create records
+const showFileDropZone = ref(false)
+const dragFileCount = ref(0)
+
+const {
+  isProcessing: isFileDropProcessing,
+  showFieldSelectDlg,
+  pendingFiles: pendingDropFiles,
+  attachmentFields,
+  handleFileDrop,
+  onFieldSelected,
+  onFieldSelectCancelled,
+} = useFileDropToCreateRecords({
+  meta,
+  callAddEmptyRow,
+  updateOrSaveRow,
+})
+
 const activeCursor = ref<CursorType>('auto')
 
 function setCursor(cursor: CursorType, customCondition?: (prevValue: CursorType) => boolean) {
@@ -2670,7 +2688,17 @@ const resetAttachmentCellDropOver = () => {
 }
 
 const onDrop = (files: File[] | null) => {
-  if (!attachmentCellDropOver.value || !files?.length || !isDataEditAllowed.value) {
+  // Hide the file drop zone on any drop
+  showFileDropZone.value = false
+  dragFileCount.value = 0
+
+  if (!files?.length || !isDataEditAllowed.value) {
+    return
+  }
+
+  // If no specific attachment cell is targeted, trigger new record creation
+  if (!attachmentCellDropOver.value) {
+    handleFileDrop(Array.from(files))
     return
   }
 
@@ -2708,6 +2736,12 @@ const onDrop = (files: File[] | null) => {
 const onOver = (_files: File[] | null, e: DragEvent) => {
   if (!isDataEditAllowed.value) return
 
+  // Track file count for the drop zone badge
+  if (e.dataTransfer?.items) {
+    const fileItems = Array.from(e.dataTransfer.items).filter((item) => item.kind === 'file')
+    dragFileCount.value = fileItems.length
+  }
+
   const rect = canvasRef.value?.getBoundingClientRect()
   if (!rect) return
 
@@ -2740,10 +2774,14 @@ const onOver = (_files: File[] | null, e: DragEvent) => {
 
   const colIndex = column ? columns.value.findIndex((col) => col.id === column.id) : -1
 
-  // If hover column is not attachment or is readonly, skip
+  // If hover column is not attachment or is readonly, show bottom drop zone instead
   if (ncIsUndefined(rowIndex) || !column || colIndex === -1 || column.uidt !== UITypes.Attachment || column.readonly) {
+    showFileDropZone.value = true
     return resetAttachmentCellDropOver()
   }
+
+  // Over a valid attachment cell — hide bottom drop zone, use cell drop instead
+  showFileDropZone.value = false
 
   if (
     attachmentCellDropOver.value &&
@@ -2762,10 +2800,15 @@ useDropZone(canvasRef, {
   onDrop,
   onEnter: () => {
     resetAttachmentCellDropOver()
+    if (isDataEditAllowed.value) {
+      showFileDropZone.value = true
+    }
   },
   onOver,
   onLeave: () => {
     resetAttachmentCellDropOver()
+    showFileDropZone.value = false
+    dragFileCount.value = 0
   },
 })
 
@@ -2806,7 +2849,7 @@ watch(
 </script>
 
 <template>
-  <div ref="wrapperRef" class="w-full h-full">
+  <div ref="wrapperRef" class="w-full h-full relative">
     <div
       v-if="isBulkOperationInProgress"
       class="absolute h-full flex items-center justify-center z-70 w-full inset-0 bg-nc-bg-default/30"
@@ -3121,9 +3164,24 @@ watch(
         </template>
       </PermissionsTooltip>
     </div>
+
+    <!-- File drop zone for creating new records -->
+    <SmartsheetGridCanvasComponentsFileDropZone
+      :visible="showFileDropZone && isDataEditAllowed && !isFileDropProcessing"
+      :file-count="dragFileCount"
+    />
   </div>
 
   <DlgSendRecordEmail v-model="showSendRecordModal" :meta="meta" :view="view" :row-id="sendRecordRowId" />
+
+  <!-- Attachment field selection dialog -->
+  <DlgAttachmentFieldSelect
+    v-model="showFieldSelectDlg"
+    :fields="attachmentFields"
+    :file-count="pendingDropFiles.length"
+    @select="onFieldSelected"
+    @cancel="onFieldSelectCancelled"
+  />
 </template>
 
 <style scoped lang="scss">

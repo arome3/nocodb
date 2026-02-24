@@ -840,6 +840,7 @@
     "externalIntegrations": "External Integrations",
     "mcpServer": "MCP Server",
     "oauthClients": "OAuth Clients",
+    "selectAttachmentField": "Select Attachment Field",
     "accessRestricted": "Access Restricted",
     "editTablePermissions": "Edit table permissions",
     "editFieldPermissions": "Edit field permissions",
@@ -2013,6 +2014,9 @@
     "nextRecord": "Next record",
     "previousRecord": "Previous record",
     "copyApiURL": "Copy API URL",
+    "dropToCreate": "Drop here to create {count} new record | Drop here to create {count} new records",
+    "dropToCreateRecords": "Drop here to create new records",
+    "createNRecords": "Create {count} new record | Create {count} new records",
     "createTable": "Create Table",
     "createTable(s)": "Create Table(s)",
     "createTables": "Create {count} table",
@@ -2383,6 +2387,7 @@
     "searchTemplates": "Search templates"
   },
   "msg": {
+    "selectAttachmentFieldDescription": "Which field would you like to upload these files to?",
     "replaceVersionAndGoLive": "Replace {version} and go live",
     "discardDraftConfirmation": "This will discard all changes made in the current draft and rollback to the latest published version. This action cannot be undone.",
     "draftDiscardedSuccessfully": "Draft discarded successfully",
@@ -2564,6 +2569,7 @@
       "youCanOnlyUploadMaxLimitFilesAtATimePlural": "You can only upload {limit} {type} files at a time"
     },
     "info": {
+      "uploadingFiles": "Uploading {current} of {total} files...",
       "noEditableCellsToClear": "No editable cells to clear",
       "defaultValSyncedCol": "Default values cannot be set for fields synced from external sources",
       "uniqueConstraintTooltip": "Prevents duplicate non-empty values across records. Empty cells are allowed.",
@@ -2805,6 +2811,9 @@
       "invalidCurrentPassword": "Current password is incorrect",
       "failedToDeleteMcpToken": "Failed to delete MCP token",
       "manualTriggerHook": "Manual hooks can't be disabled",
+      "noAttachmentFields": "This table has no attachment fields. Add an attachment field to upload files.",
+      "failedToUploadFiles": "Failed to upload {count} file | Failed to upload {count} files",
+      "failedToCreateRecords": "Failed to create records from dropped files",
       "errorLoadingRecord": "Error loading record data",
       "fetchingCalendarData": "Error fetching calendar data",
       "fetchingActiveDates": "Error fetching active dates",
@@ -2963,6 +2972,7 @@
       "nCellsCopied": "{n} cells copied"
     },
     "success": {
+      "createdRecords": "Created {count} record | Created {count} records",
       "workflowDisabled": "Workflow de-activated successfully",
       "workflowEnabled": "Workflow activated successfully",
       "workflowDuplicated": "Workflow duplicated successfully",
