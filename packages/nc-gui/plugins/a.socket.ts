@@ -4,6 +4,8 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       id: () => null,
       onMessage: (..._args: any[]) => null,
       offMessage: (..._args: any[]) => null,
+      emitPresence: (..._args: any[]) => undefined,
+      onReconnect: (..._args: any[]) => () => {},
     }
     nuxtApp.provide('ncSocket', ncSocket)
   }
