@@ -135,11 +135,17 @@ export interface PresenceHeartbeatPayload extends BaseSocketPayload {
   rowId?: string | null;
 }
 
+// Sent when user switches tables within the same base
+export interface PresenceTableChangePayload extends BaseSocketPayload {
+  action: 'table-change';
+  userId: string;
+  tableId: string;
+}
+
 // Sent on explicit departure or server disconnect cleanup
 export interface PresenceLeavePayload extends BaseSocketPayload {
   action: 'leave';
   userId: string;
-  tableId?: string; // Used server-side for room key lookup
 }
 
 // Server-emitted batch snapshot for initial sync and large rooms
@@ -149,6 +155,7 @@ export interface PresenceBatchPayload extends BaseSocketPayload {
     userId: string;
     email: string;
     displayName: string;
+    tableId?: string;
     lastSeen: number;
     meta?: Record<string, any> | null;
   }>;
@@ -157,6 +164,7 @@ export interface PresenceBatchPayload extends BaseSocketPayload {
 export type PresencePayload =
   | PresenceAnnouncePayload
   | PresenceHeartbeatPayload
+  | PresenceTableChangePayload
   | PresenceLeavePayload
   | PresenceBatchPayload;
 
