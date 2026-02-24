@@ -63,11 +63,12 @@ watch(
     </template>
 
     <div class="flex flex-col gap-4 mt-2">
-      <a-select
+      <NcSelect
         v-model:value="selectedFieldId"
         class="w-full nc-attachment-field-select"
         :placeholder="t('placeholder.selectField')"
         dropdown-class-name="nc-attachment-field-select-dropdown"
+        dropdown-match-select-width
       >
         <a-select-option
           v-for="field in fields"
@@ -75,11 +76,14 @@ watch(
           :value="field.id"
         >
           <div class="flex items-center gap-2">
-            <GeneralIcon icon="attachment" class="text-gray-500" />
-            <span>{{ field.title }}</span>
+            <SmartsheetHeaderIcon :column="field" class="!ml-0" />
+            <NcTooltip class="flex-1 truncate" show-on-truncate-only>
+              <template #title>{{ field.title }}</template>
+              <template #default>{{ field.title }}</template>
+            </NcTooltip>
           </div>
         </a-select-option>
-      </a-select>
+      </NcSelect>
 
       <div class="flex justify-end gap-2">
         <NcButton type="secondary" size="small" @click="handleCancel">

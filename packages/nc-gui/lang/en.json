@@ -2569,7 +2569,7 @@
       "youCanOnlyUploadMaxLimitFilesAtATimePlural": "You can only upload {limit} {type} files at a time"
     },
     "info": {
-      "uploadingFiles": "Uploading {current} of {total} files...",
+      "uploadingFiles": "Uploading {count} file... | Uploading {count} files...",
       "noEditableCellsToClear": "No editable cells to clear",
       "defaultValSyncedCol": "Default values cannot be set for fields synced from external sources",
       "uniqueConstraintTooltip": "Prevents duplicate non-empty values across records. Empty cells are allowed.",
@@ -2812,8 +2812,10 @@
       "failedToDeleteMcpToken": "Failed to delete MCP token",
       "manualTriggerHook": "Manual hooks can't be disabled",
       "noAttachmentFields": "This table has no attachment fields. Add an attachment field to upload files.",
+      "fileTooLarge": "The size of {name} exceeds the maximum file size {size}.",
+      "fileTypeNotAllowed": "{name} has the MIME type {type} which is not allowed in this column.",
       "failedToUploadFiles": "Failed to upload {count} file | Failed to upload {count} files",
-      "failedToCreateRecords": "Failed to create records from dropped files",
+      "failedToCreateRecords": "Failed to create {count} record from dropped files | Failed to create {count} records from dropped files",
       "errorLoadingRecord": "Error loading record data",
       "fetchingCalendarData": "Error fetching calendar data",
       "fetchingActiveDates": "Error fetching active dates",
@@ -2969,7 +2971,9 @@
       "notAllowedToChangeDefaultView": "You are not allowed to change the default view",
       "notAllowedToChangeGridView": "You are not allowed to change the view to personal when it's the last collaborative grid view",
       "nCellCopied": "{n} cell copied",
-      "nCellsCopied": "{n} cells copied"
+      "nCellsCopied": "{n} cells copied",
+      "nRecordCreated": "{n} record created",
+      "nRecordsCreated": "{n} records created"
     },
     "success": {
       "createdRecords": "Created {count} record | Created {count} records",

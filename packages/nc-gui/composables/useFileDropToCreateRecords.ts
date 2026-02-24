@@ -1,7 +1,8 @@
-import type { ColumnType, TableType, ViewType } from 'nocodb-sdk'
+import type { AttachmentType, ColumnType, TableType, ViewType } from 'nocodb-sdk'
 import { UITypes } from 'nocodb-sdk'
 import type { Ref } from 'vue'
 import type { Row } from '#imports'
+import { NOCO } from '~/lib/constants'
 
 interface UseFileDropToCreateRecordsOptions {
   meta: Ref<TableType | undefined>
@@ -33,31 +34,33 @@ export function useFileDropToCreateRecords(options: UseFileDropToCreateRecordsOp
 
   const { t } = useI18n()
   const { base } = storeToRefs(useBase())
+  const { appInfo } = useGlobal()
   const { batchUploadFiles } = useAttachment()
 
   const isProcessing = ref(false)
   const showFieldSelectDlg = ref(false)
   const pendingFiles = ref<File[]>([])
 
-  // Get all attachment columns from the table
+  /** Non-system attachment columns available in the current table */
   const attachmentFields = computed<ColumnType[]>(() => {
     if (!meta.value?.columns) return []
     return meta.value.columns.filter((col) => col.uidt === UITypes.Attachment && !col.system)
   })
 
-  // Get the display (primary value) column
+  /** Primary display column of the table */
   const displayField = computed<ColumnType | undefined>(() => {
     return meta.value?.columns?.find((col) => col.pv)
   })
 
-  // Check if display field is a text-like type that can hold filenames
+  /** Whether the display field can hold a filename string */
   const isDisplayFieldText = computed(() => {
     if (!displayField.value) return false
     return [UITypes.SingleLineText, UITypes.LongText].includes(displayField.value.uidt as UITypes)
   })
 
   /**
-   * Main entry point: called when files are dropped on the bottom drop zone
+   * Main entry point: called when files are dropped on the bottom drop zone.
+   * Routes to either auto-select (single attachment field) or shows a picker dialog.
    */
   const handleFileDrop = (files: File[]) => {
     if (!files.length || !meta.value) return
@@ -70,18 +73,14 @@ export function useFileDropToCreateRecords(options: UseFileDropToCreateRecordsOp
     }
 
     if (fields.length === 1) {
-      // Auto-select the only attachment field
       processFilesWithField(files, fields[0])
     } else {
-      // Show field selection dialog
       pendingFiles.value = files
       showFieldSelectDlg.value = true
     }
   }
 
-  /**
-   * Called when user selects a field from the dialog
-   */
+  /** Called when user selects a field from the multi-field selection dialog */
   const onFieldSelected = (field: ColumnType) => {
     const files = pendingFiles.value
     pendingFiles.value = []
@@ -89,88 +88,138 @@ export function useFileDropToCreateRecords(options: UseFileDropToCreateRecordsOp
     processFilesWithField(files, field)
   }
 
-  /**
-   * Called when user cancels the field selection dialog
-   */
+  /** Called when user cancels the field selection dialog */
   const onFieldSelectCancelled = () => {
     pendingFiles.value = []
     showFieldSelectDlg.value = false
   }
 
   /**
-   * Core logic: upload files first, then create records with attachment data included.
+   * Validates a file against the attachment column's configured limits:
+   * max file size and allowed MIME types. Mirrors the checks in useAttachmentCell.
+   * Returns an error message string if invalid, or null if the file is acceptable.
+   */
+  const validateFile = (file: File, columnMeta: Record<string, any>): string | null => {
+    if (!appInfo.value.ee) return null
+
+    const maxSize = columnMeta.maxAttachmentSize
+    if (file.size && maxSize && file.size > maxSize) {
+      return t('msg.error.fileTooLarge', {
+        name: file.name,
+        size: getReadableFileSize(maxSize),
+      })
+    }
+
+    const allowedTypes: string[] = columnMeta.supportedAttachmentMimeTypes || ['*']
+    if (
+      !allowedTypes.includes('*') &&
+      !allowedTypes.includes(file.type) &&
+      !allowedTypes.includes(file.type?.split('/')[0])
+    ) {
+      return t('msg.error.fileTypeNotAllowed', { name: file.name, type: file.type })
+    }
+
+    return null
+  }
+
+  /**
+   * Core logic: validate files, upload in a single batch, then create one record per file.
    *
-   * The key insight is that we must upload files BEFORE creating the row, then include
-   * the attachment JSON in the row's initial data via `rowOverwrite`. This ensures:
-   * 1. The attachment value is part of the insert payload (not a separate update)
-   * 2. We avoid stale row references (insertRow replaces the cached object)
-   * 3. The grid renders correctly because the row data is complete on first save
+   * Upload-first strategy avoids stale row references — insertRow replaces the cached
+   * row object after server insert, so any ref held before save becomes stale.
+   * By uploading first and passing attachment JSON via `rowOverwrite`, each row is
+   * created and saved in a single call with complete data.
    */
   const processFilesWithField = async (files: File[], attachmentColumn: ColumnType) => {
     if (!meta.value?.id || !callAddEmptyRow || isProcessing.value) return
+    if (!attachmentColumn.title) return
 
     isProcessing.value = true
-    const totalFiles = files.length
-    let successCount = 0
-    let failCount = 0
 
     try {
-      message.loading(t('msg.info.uploadingFiles', { current: 0, total: totalFiles }))
+      // Build attachment column meta for validation (mirrors useAttachmentCell pattern in attachment/utils.ts)
+      const defaultMeta = {
+        ...(appInfo.value.ee && {
+          maxAttachmentSize: Math.max(1, +appInfo.value.ncAttachmentFieldSize || 20) || 20,
+          supportedAttachmentMimeTypes: ['*'],
+        }),
+      }
+      const columnMeta = { ...defaultMeta, ...parseProp(attachmentColumn.meta) }
 
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
+      // Step 1: Validate all files before uploading any
+      const validFiles: File[] = []
+      for (const file of files) {
+        const error = validateFile(file, columnMeta)
+        if (error) {
+          message.error(error)
+        } else {
+          validFiles.push(file)
+        }
+      }
+
+      if (!validFiles.length) {
+        return
+      }
+
+      message.loading(t('msg.info.uploadingFiles', { count: validFiles.length }))
+
+      // Step 2: Upload all files in a single batch call (batchUploadFiles chunks internally by 10)
+      // Pass a copy because batchUploadFiles uses splice() which mutates the input array
+      const uploadPath = [NOCO, base.value?.id, meta.value.id, attachmentColumn.id].join('/')
+      const uploadedFiles = await batchUploadFiles([...validFiles], uploadPath)
+
+      message.destroy()
+
+      // batchUploadFiles returns [] and shows its own error toast on failure
+      if (!uploadedFiles?.length) {
+        return
+      }
+
+      // Step 3: Create one record per uploaded file
+      let successCount = 0
+      let failCount = 0
+
+      for (let i = 0; i < uploadedFiles.length; i++) {
+        const uploaded: AttachmentType = uploadedFiles[i]
+        const originalFile = validFiles[i]
 
         try {
-          // Step 1: Upload the file to storage FIRST (before creating the row)
-          const uploadPath = ['noco', base.value?.id, meta.value?.id, attachmentColumn.id].join('/')
-          const uploadedFiles = await batchUploadFiles([file], uploadPath)
-
-          if (!uploadedFiles?.length) {
-            failCount++
-            continue
-          }
-
-          // Step 2: Build row data with both filename AND attachment value included
           const rowOverwrite: Record<string, any> = {}
 
-          // Set display field to filename (without extension) if it's a text type
+          // Populate display field with filename (sans extension) when it's a text column
           if (isDisplayFieldText.value && displayField.value?.title) {
-            rowOverwrite[displayField.value.title] = extractFilenameWithoutExtension(file.name)
+            rowOverwrite[displayField.value.title] = extractFilenameWithoutExtension(originalFile.name)
           }
 
-          // Set attachment field with uploaded file data
-          rowOverwrite[attachmentColumn.title!] = JSON.stringify(uploadedFiles)
+          rowOverwrite[attachmentColumn.title] = JSON.stringify([uploaded])
 
-          // Step 3: Create the row with all data pre-populated
           const newRow = callAddEmptyRow(undefined, meta.value, rowOverwrite, [])
           if (!newRow) {
             failCount++
             continue
           }
 
-          // Step 4: Save the complete row (insert with attachment data included)
           await updateOrSaveRow(newRow, undefined, undefined, undefined, undefined, [])
           successCount++
-        } catch (e) {
-          console.error(`Failed to process file: ${file.name}`, e)
+        } catch {
           failCount++
         }
       }
 
-      // Show result message
-      message.destroy()
-
       if (successCount > 0) {
-        message.success(t('msg.success.createdRecords', { count: successCount }))
+        message.toast(
+          successCount === 1
+            ? t('msg.toast.nRecordCreated', { n: successCount })
+            : t('msg.toast.nRecordsCreated', { n: successCount }),
+        )
       }
 
       if (failCount > 0) {
-        message.error(t('msg.error.failedToUploadFiles', { count: failCount }))
+        message.error(t('msg.error.failedToCreateRecords', { count: failCount }))
       }
-    } catch (e: any) {
+    } catch {
       message.destroy()
-      message.error(t('msg.error.failedToCreateRecords'))
-      console.error('Failed to create records from dropped files', e)
+      message.error(t('msg.error.failedToCreateRecords', { count: files.length }))
     } finally {
       isProcessing.value = false
     }

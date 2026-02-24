@@ -421,6 +421,9 @@ const {
   updateOrSaveRow,
 })
 
+/** Whether the table has attachment fields and data editing is allowed — gates the file drop zone */
+const canDropFilesToCreateRecords = computed(() => isDataEditAllowed.value && attachmentFields.value.length > 0)
+
 const activeCursor = ref<CursorType>('auto')
 
 function setCursor(cursor: CursorType, customCondition?: (prevValue: CursorType) => boolean) {
@@ -2776,7 +2779,9 @@ const onOver = (_files: File[] | null, e: DragEvent) => {
 
   // If hover column is not attachment or is readonly, show bottom drop zone instead
   if (ncIsUndefined(rowIndex) || !column || colIndex === -1 || column.uidt !== UITypes.Attachment || column.readonly) {
-    showFileDropZone.value = true
+    if (canDropFilesToCreateRecords.value) {
+      showFileDropZone.value = true
+    }
     return resetAttachmentCellDropOver()
   }
 
@@ -2800,7 +2805,7 @@ useDropZone(canvasRef, {
   onDrop,
   onEnter: () => {
     resetAttachmentCellDropOver()
-    if (isDataEditAllowed.value) {
+    if (canDropFilesToCreateRecords.value) {
       showFileDropZone.value = true
     }
   },
@@ -3167,7 +3172,7 @@ watch(
 
     <!-- File drop zone for creating new records -->
     <SmartsheetGridCanvasComponentsFileDropZone
-      :visible="showFileDropZone && isDataEditAllowed && !isFileDropProcessing"
+      :visible="showFileDropZone && canDropFilesToCreateRecords && !isFileDropProcessing"
       :file-count="dragFileCount"
     />
   </div>

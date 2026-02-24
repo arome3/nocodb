@@ -30,9 +30,6 @@ const dropZoneText = computed(() => {
       <div class="nc-file-drop-zone-content">
         <GeneralIcon icon="upload" class="nc-file-drop-zone-icon" />
         <span class="nc-file-drop-zone-text">{{ dropZoneText }}</span>
-        <span v-if="fileCount > 0" class="nc-file-drop-zone-badge">
-          {{ fileCount }} {{ fileCount === 1 ? 'file' : 'files' }}
-        </span>
       </div>
     </div>
   </Transition>
@@ -43,11 +40,9 @@ const dropZoneText = computed(() => {
   @apply absolute bottom-0 left-0 right-0 z-50;
   @apply flex items-center justify-center;
   @apply pointer-events-none;
+  @apply bg-nc-bg-default rounded-lg m-2;
   min-height: 120px;
-  background: rgba(37, 99, 235, 0.05);
-  border: 2px dashed #2563eb;
-  border-radius: 8px;
-  margin: 8px;
+  border: 2px dashed rgb(var(--color-primary));
 }
 
 .nc-file-drop-zone-content {
@@ -60,10 +55,6 @@ const dropZoneText = computed(() => {
 
 .nc-file-drop-zone-text {
   @apply text-sm font-medium text-primary;
-}
-
-.nc-file-drop-zone-badge {
-  @apply text-xs text-primary bg-primary bg-opacity-10 px-2 py-0.5 rounded-full;
 }
 
 .slide-up-enter-active,
