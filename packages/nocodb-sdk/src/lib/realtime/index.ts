@@ -16,6 +16,7 @@ export enum EventType {
   TEAM_EVENT = 'event-team',
   WORKFLOW_EVENT = 'event-workflow',
   WORKFLOW_EXECUTION_EVENT = 'event-workflow-execution',
+  PRESENCE_EVENT = 'event-presence',
 }
 
 // Base payload interface for all socket events
@@ -110,6 +111,53 @@ export interface NotificationPayload extends BaseSocketPayload {
   payload: Partial<NotificationType>;
 }
 
+// Presence event payloads — split for bandwidth efficiency:
+// 'announce' (~200B, once on join) vs 'heartbeat' (~50B, every 30s)
+
+// Sent once on room join — full user identity
+export interface PresenceAnnouncePayload extends BaseSocketPayload {
+  action: 'announce';
+  userId: string;
+  email: string;
+  displayName: string;
+  tableId: string;
+}
+
+// Sent every 30s — lightweight keepalive + optional cursor (Phase 2)
+export interface PresenceHeartbeatPayload extends BaseSocketPayload {
+  action: 'heartbeat';
+  userId: string;
+  tableId: string;
+  // Cell-level presence (Phase 2 — nullable)
+  viewId?: string | null;
+  fieldId?: string | null;
+  rowId?: string | null;
+}
+
+// Sent on explicit departure or server disconnect cleanup
+export interface PresenceLeavePayload extends BaseSocketPayload {
+  action: 'leave';
+  userId: string;
+  tableId?: string; // Used server-side for room key lookup
+}
+
+// Server-emitted batch snapshot for initial sync and large rooms
+export interface PresenceBatchPayload extends BaseSocketPayload {
+  action: 'batch';
+  users: Array<{
+    userId: string;
+    email: string;
+    displayName: string;
+    lastSeen: number;
+  }>;
+}
+
+export type PresencePayload =
+  | PresenceAnnouncePayload
+  | PresenceHeartbeatPayload
+  | PresenceLeavePayload
+  | PresenceBatchPayload;
+
 // Union type for all socket event payloads
 export type SocketEventPayload =
   | ConnectionWelcomePayload
@@ -117,7 +165,8 @@ export type SocketEventPayload =
   | DataPayload
   | MetaPayload
   | CommentPayload
-  | NotificationPayload;
+  | NotificationPayload
+  | PresencePayload;
 
 // Type mapping for event types to their corresponding payloads
 export type SocketEventPayloadMap = {
@@ -128,6 +177,7 @@ export type SocketEventPayloadMap = {
   [EventType.META_EVENT]: MetaPayload;
   [EventType.USER_EVENT]: UserEventPayload;
   [EventType.COMMENT_EVENT]: CommentPayload;
+  [EventType.PRESENCE_EVENT]: PresencePayload;
   [key: string]: BaseSocketPayload;
 };
 

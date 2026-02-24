@@ -38,6 +38,7 @@ declare module '#app' {
       id: () => string | null
       onMessage: (evt: string, handler: (...args: any[]) => void) => string
       offMessage: (listenerId: string) => void
+      emitPresence: (payload: Record<string, any>) => void
     }
     $eventBus: {
       smartsheetStoreEventBus: UseEventBusReturn<SmartsheetStoreEvents, any>

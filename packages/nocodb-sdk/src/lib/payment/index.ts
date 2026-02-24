@@ -79,6 +79,8 @@ export enum PlanFeatureTypes {
   FEATURE_PINNED_FILTER = 'feature_pinned_filter',
   // EE-only UUID field type — gated by plan feature flag
   FEATURE_UUID_FIELD = 'feature_uuid_field',
+  // Realtime collaborator presence — Business plan and above
+  FEATURE_COLLABORATOR_PRESENCE = 'feature_collaborator_presence',
 }
 
 export enum PlanTitles {
@@ -304,6 +306,8 @@ export const PlanFeatureUpgradeMessages: Record<PlanFeatureTypes, string> = {
   [PlanFeatureTypes.FEATURE_TOGGLE_FILTER]: 'to enable or disable individual filters.',
   [PlanFeatureTypes.FEATURE_PINNED_FILTER]: 'to pin filters to the toolbar.',
   [PlanFeatureTypes.FEATURE_UUID_FIELD]: 'to use UUID fields.',
+  [PlanFeatureTypes.FEATURE_COLLABORATOR_PRESENCE]:
+    'to see who else is viewing the same table.',
 };
 
 export const getUpgradeMessage = (
