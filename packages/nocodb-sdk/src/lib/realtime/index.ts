@@ -121,6 +121,7 @@ export interface PresenceAnnouncePayload extends BaseSocketPayload {
   email: string;
   displayName: string;
   tableId: string;
+  meta?: Record<string, any> | null; // User profile icon metadata (for avatar rendering)
 }
 
 // Sent every 30s — lightweight keepalive + optional cursor (Phase 2)
@@ -149,6 +150,7 @@ export interface PresenceBatchPayload extends BaseSocketPayload {
     email: string;
     displayName: string;
     lastSeen: number;
+    meta?: Record<string, any> | null;
   }>;
 }
 
