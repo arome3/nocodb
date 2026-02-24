@@ -3178,8 +3178,9 @@ watch(
       </PermissionsTooltip>
     </div>
 
-    <!-- File drop zone for creating new records -->
+    <!-- File drop zone for creating new records (EE only) -->
     <SmartsheetGridCanvasComponentsFileDropZone
+      v-if="isEeUI"
       :visible="showFileDropZone && canDropFilesToCreateRecords && !isFileDropProcessing"
       :file-count="dragFileCount"
     />
@@ -3187,8 +3188,9 @@ watch(
 
   <DlgSendRecordEmail v-model="showSendRecordModal" :meta="meta" :view="view" :row-id="sendRecordRowId" />
 
-  <!-- Attachment field selection dialog -->
+  <!-- Attachment field selection dialog (EE only) -->
   <DlgAttachmentFieldSelect
+    v-if="isEeUI"
     v-model="showFieldSelectDlg"
     :fields="attachmentFields"
     :file-count="pendingDropFiles.length"
