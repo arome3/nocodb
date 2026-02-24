@@ -78,38 +78,18 @@ const topbarBreadcrumbItemWidth = computed(() => {
         <!-- Sandbox Status -->
         <LazySmartsheetTopbarSandboxStatus v-if="!isSharedBase && !isMobileMode" />
 
-        <NcButton
+        <LazySmartsheetTopbarCollaboratorPresence
           v-if="
-            (appInfo.isOnPrem || isEeUI || isFeatureEnabled(FEATURE_FLAG.EXTENSIONS)) &&
+            !isPublic &&
             !isSharedBase &&
+            !isMobileMode &&
             !activeScriptId &&
             !activeDashboardId &&
             !activeWorkflowId &&
             openedViewsTab === 'view' &&
-            !isMobileMode
+            appInfo.ee
           "
-          v-e="['c:extension-toggle']"
-          type="secondary"
-          size="small"
-          class="nc-topbar-extension-btn"
-          :class="{ '!bg-nc-bg-brand !hover:bg-nc-brand-100/70 !text-nc-content-brand': isPanelExpanded }"
-          data-testid="nc-topbar-extension-btn"
-          @click="toggleExtensionPanel"
-        >
-          <div class="flex items-center justify-center min-w-[28.69px]">
-            <GeneralIcon
-              :icon="isPanelExpanded ? 'ncPuzzleSolid' : 'ncPuzzleOutline'"
-              class="w-4 h-4 !stroke-transparent"
-              :class="{ 'border-l-1 border-transparent': isPanelExpanded }"
-            />
-            <span
-              class="overflow-hidden trasition-all duration-200"
-              :class="{ 'w-[0px] invisible': isPanelExpanded, 'ml-1 w-[74px]': !isPanelExpanded }"
-            >
-              {{ $t('general.extensions') }}
-            </span>
-          </div>
-        </NcButton>
+        />
 
         <NcButton
           v-if="
@@ -152,18 +132,30 @@ const topbarBreadcrumbItemWidth = computed(() => {
 
         <DashboardMiniSidebarTheme v-if="isSharedBase" placement="bottom" render-as-btn button-class="h-8 w-8" />
 
-        <LazySmartsheetTopbarCollaboratorPresence
+        <NcButton
           v-if="
-            !isPublic &&
+            (appInfo.isOnPrem || isEeUI || isFeatureEnabled(FEATURE_FLAG.EXTENSIONS)) &&
             !isSharedBase &&
-            !isMobileMode &&
             !activeScriptId &&
             !activeDashboardId &&
             !activeWorkflowId &&
             openedViewsTab === 'view' &&
-            appInfo.ee
+            !isMobileMode
           "
-        />
+          v-e="['c:extension-toggle']"
+          type="secondary"
+          size="small"
+          class="nc-topbar-extension-btn"
+          :class="{ '!bg-nc-bg-brand !hover:bg-nc-brand-100/70 !text-nc-content-brand': isPanelExpanded }"
+          data-testid="nc-topbar-extension-btn"
+          @click="toggleExtensionPanel"
+        >
+          <GeneralIcon
+            :icon="isPanelExpanded ? 'ncPuzzleSolid' : 'ncPuzzleOutline'"
+            class="w-4 h-4 !stroke-transparent"
+            :class="{ 'border-l-1 border-transparent': isPanelExpanded }"
+          />
+        </NcButton>
 
         <LazySmartsheetTopbarShareProject v-if="!activeScriptId && !activeWorkflowId" />
 
