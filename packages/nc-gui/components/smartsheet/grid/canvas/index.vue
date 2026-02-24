@@ -2691,11 +2691,21 @@ const resetAttachmentCellDropOver = () => {
 }
 
 const onDrop = (files: File[] | null) => {
-  // Hide the file drop zone on any drop
+  // Capture whether the bottom drop zone was showing before clearing it
+  const wasDropZoneVisible = showFileDropZone.value
+
   showFileDropZone.value = false
   dragFileCount.value = 0
 
   if (!files?.length || !isDataEditAllowed.value) {
+    return
+  }
+
+  // If the bottom drop zone was visible, always create new records
+  // (even if an attachment cell is highlighted underneath the zone)
+  if (wasDropZoneVisible && canDropFilesToCreateRecords.value) {
+    resetAttachmentCellDropOver()
+    handleFileDrop(Array.from(files))
     return
   }
 
@@ -2785,9 +2795,7 @@ const onOver = (_files: File[] | null, e: DragEvent) => {
     return resetAttachmentCellDropOver()
   }
 
-  // Over a valid attachment cell — hide bottom drop zone, use cell drop instead
-  showFileDropZone.value = false
-
+  // Over a valid attachment cell — keep bottom drop zone visible, highlight the cell too
   if (
     attachmentCellDropOver.value &&
     attachmentCellDropOver.value.rowIndex === rowIndex &&
