@@ -24,6 +24,7 @@ import type {
   IntegrationUpdateEvent,
   KanbanViewUpdateEvent,
   ListViewUpdateEvent,
+  TimelineViewUpdateEvent,
   MetaDiffEvent,
   OrgUserInviteEvent,
   PluginEvent,
@@ -332,6 +333,7 @@ export class AppHooksService {
       | AppEvents.FORM_CREATE
       | AppEvents.GRID_CREATE
       | AppEvents.CALENDAR_CREATE
+      | AppEvents.TIMELINE_CREATE
       | AppEvents.GALLERY_CREATE
       | AppEvents.KANBAN_CREATE
       | AppEvents.MAP_CREATE
@@ -343,6 +345,7 @@ export class AppHooksService {
       | AppEvents.FORM_DELETE
       | AppEvents.GRID_DELETE
       | AppEvents.CALENDAR_DELETE
+      | AppEvents.TIMELINE_DELETE
       | AppEvents.GALLERY_DELETE
       | AppEvents.KANBAN_DELETE
       | AppEvents.MAP_DELETE
@@ -353,6 +356,7 @@ export class AppHooksService {
     event:
       | AppEvents.GRID_UPDATE
       | AppEvents.CALENDAR_UPDATE
+      | AppEvents.TIMELINE_UPDATE
       | AppEvents.GALLERY_UPDATE
       | AppEvents.KANBAN_UPDATE
       | AppEvents.MAP_UPDATE
@@ -364,7 +368,8 @@ export class AppHooksService {
       | KanbanViewUpdateEvent
       | CalendarViewUpdateEvent
       | FormViewUpdateEvent
-      | ListViewUpdateEvent,
+      | ListViewUpdateEvent
+      | TimelineViewUpdateEvent,
   ): void;
   emit(
     event:
@@ -407,6 +412,7 @@ export class AppHooksService {
       | AppEvents.FORM_UPDATE
       | AppEvents.GRID_UPDATE
       | AppEvents.CALENDAR_UPDATE
+      | AppEvents.TIMELINE_UPDATE
       | AppEvents.GALLERY_UPDATE
       | AppEvents.KANBAN_UPDATE
       | AppEvents.MAP_UPDATE
@@ -418,7 +424,8 @@ export class AppHooksService {
       | KanbanViewUpdateEvent
       | CalendarViewUpdateEvent
       | FormViewUpdateEvent
-      | ListViewUpdateEvent,
+      | ListViewUpdateEvent
+      | TimelineViewUpdateEvent,
   ): void;
   emit(
     event:

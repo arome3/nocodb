@@ -602,6 +602,7 @@ import NcFormViewIcon from '~icons/nc-icons/form'
 import NcGalleryViewIcon from '~icons/nc-icons/gallery'
 import NcKanbanViewIcon from '~icons/nc-icons/kanban'
 import NcCalendarViewIcon from '~icons/nc-icons/calendar'
+import NcTimelineViewIcon from '~icons/nc-icons/timeline'
 import NcPuzzleSolid from '~icons/nc-icons/puzzle-solid'
 import NcPuzzleOutline from '~icons/nc-icons/puzzle-outline'
 
@@ -970,6 +971,7 @@ import NcClipboardType from '~icons/nc-icons-v2/clipboard-type'
 
 export const iconMap = {
   'calendar': NcCalendarViewIcon,
+  'timeline': NcTimelineViewIcon,
   'grid': NcGridViewIcon,
   'form': NcFormViewIcon,
   'gallery': NcGalleryViewIcon,
