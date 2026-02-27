@@ -236,6 +236,14 @@ const FEATURES = [
     isEngineering: true,
     isEE: true,
   },
+  {
+    id: 'timeline',
+    title: 'Timeline View',
+    description: 'Enable timeline view to visualize date-based data on a timeline.',
+    enabled: false,
+    version: 1,
+    isEE: true,
+  },
 ] as const
 
 export const FEATURE_FLAG = Object.fromEntries(FEATURES.map((feature) => [feature.id.toUpperCase(), feature.id])) as Record<
