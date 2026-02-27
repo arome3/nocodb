@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type ColumnType, isMMOrMMLike } from 'nocodb-sdk'
+import { type ColumnType, isBtLikeV2Junction, isMMOrMMLike } from 'nocodb-sdk'
 import { UITypes, isCreatedOrLastModifiedByCol, isCreatedOrLastModifiedTimeCol } from 'nocodb-sdk'
 
 const props = defineProps<{
@@ -45,6 +45,7 @@ function onNavigate(dir: NavigateDir, e: KeyboardEvent) {
 const isPrimaryCol = computed(() => isPrimary(column.value))
 
 const virtualCellType = computed(() => {
+  if (isBtLikeV2Junction(column.value)) return 'bt'
   if (isLink(column.value)) return 'link'
   if (isHm(column.value)) return 'hm'
   if (isMMOrMMLike(column.value)) return 'mm'
