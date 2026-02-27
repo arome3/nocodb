@@ -890,6 +890,51 @@ const parseConditionV2 = async (
                 }
               }
               break;
+            case 'regex':
+              {
+                // Add REGEX filter support for advanced pattern matching
+                const clientType = knex.clientType();
+                if (clientType === 'pg') {
+                  qb = qb.where(
+                    knex.raw(`??::text ~ '${filter.value}'`, [field]),
+                  );
+                } else if (
+                  clientType === 'mysql' ||
+                  clientType === 'mysql2'
+                ) {
+                  qb = qb.where(
+                    knex.raw(`?? REGEXP '${filter.value}'`, [field]),
+                  );
+                } else {
+                  // sqlite3 — use REGEXP function
+                  qb = qb.where(
+                    knex.raw(`?? REGEXP '${filter.value}'`, [field]),
+                  );
+                }
+              }
+              break;
+            case 'nregex':
+              {
+                // Negated REGEX filter
+                const clientType = knex.clientType();
+                if (clientType === 'pg') {
+                  qb = qb.where(
+                    knex.raw(`??::text !~ '${filter.value}'`, [field]),
+                  );
+                } else if (
+                  clientType === 'mysql' ||
+                  clientType === 'mysql2'
+                ) {
+                  qb = qb.where(
+                    knex.raw(`?? NOT REGEXP '${filter.value}'`, [field]),
+                  );
+                } else {
+                  qb = qb.where(
+                    knex.raw(`?? NOT REGEXP '${filter.value}'`, [field]),
+                  );
+                }
+              }
+              break;
             case 'allof':
             case 'anyof':
             case 'nallof':
