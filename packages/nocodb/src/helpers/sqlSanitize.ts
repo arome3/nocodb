@@ -16,18 +16,11 @@ export function sanitizeAndEscapeDots(alias: string, knex: XKnex) {
   const sanitizedAlias = sanitize(alias);
   // if alias does not contain any dot then return as it is
   if (!knex || !sanitizedAlias.includes('.')) return sanitizedAlias;
-  // if alias contains dot then return knex.raw with escaped dot
-  switch (knex?.clientType?.()) {
-    case 'mysql':
-    case 'mysql2':
-      return knex.raw(
-        knex.raw('??', sanitizedAlias).toQuery().replace(/`\.`/g, '.'),
-      );
-    case 'pg':
-      return knex.raw(
-        knex.raw('??', sanitizedAlias).toQuery().replace(/"\."/g, '.'),
-      );
-    default:
-      return sanitizedAlias;
-  }
+
+  // Split on dots and bind each identifier part individually via Knex's
+  // ?? placeholder. This keeps parameterization intact without .toQuery()
+  // string interpolation followed by regex replacement.
+  const parts = sanitizedAlias.split('.');
+  const placeholders = parts.map(() => '??').join('.');
+  return knex.raw(placeholders, parts);
 }
