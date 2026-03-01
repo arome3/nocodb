@@ -165,20 +165,23 @@ export default async function sortV2(
           include_internal_user: true,
         });
 
-        // create nested replace statement for each user
-        const finalStatement = baseUsers.reduce((acc, user) => {
-          const qb = knex.raw(`REPLACE(${acc}, ?, ?)`, [
+        // Build nested REPLACE using Knex parameterized bindings throughout.
+        // Previously this used .toQuery() to convert each intermediate step to
+        // a raw SQL string, then interpolated it back via template literal —
+        // which breaks Knex's binding chain and risks SQL fragment injection
+        // if user display names or emails contain SQL metacharacters.
+        let sortExpr: Knex.Raw = knex.raw('??', [column.column_name]);
+        for (const user of baseUsers) {
+          sortExpr = knex.raw('REPLACE(?, ?, ?)', [
+            sortExpr,
             user.id,
             user.display_name || user.email,
           ]);
-          return qb.toQuery();
-        }, knex.raw(`??`, [column.column_name]).toQuery());
+        }
 
-        qb.orderBy(
-          sanitize(knex.raw(finalStatement)),
-          sort.direction || 'asc',
-          nulls,
-        );
+        // Validate sort direction against allowlist to prevent injection
+        const validDirection = sort.direction === 'desc' ? 'desc' : 'asc';
+        qb.orderBy(sortExpr, validDirection, nulls);
 
         break;
       }
